@@ -11,7 +11,12 @@
 import { join } from 'path';
 import { expect } from 'chai';
 import { CdtDebugClient } from './debugClient';
-import { fillDefaults, standardBeforeEach, testProgramsDir } from './utils';
+import {
+    fillDefaults,
+    gdbAsync,
+    standardBeforeEach,
+    testProgramsDir,
+} from './utils';
 
 describe('logpoints', async () => {
     let dc: CdtDebugClient;
@@ -27,6 +32,15 @@ describe('logpoints', async () => {
     });
 
     afterEach(async () => {
+        if (!gdbAsync) {
+            const waitForContinued = dc.waitForEvent('continued');
+            const threads = await dc.threadsRequest();
+            const pr = dc.continueRequest({
+                threadId: threads.body.threads[0].id,
+            });
+            await Promise.all([pr, waitForContinued]);
+        }
+
         await dc.stop();
     });
 
