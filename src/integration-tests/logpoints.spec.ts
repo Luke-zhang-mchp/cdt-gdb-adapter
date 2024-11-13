@@ -14,6 +14,7 @@ import { CdtDebugClient } from './debugClient';
 import {
     fillDefaults,
     gdbAsync,
+    isRemoteTest,
     standardBeforeEach,
     testProgramsDir,
 } from './utils';
@@ -32,7 +33,10 @@ describe('logpoints', async () => {
     });
 
     afterEach(async () => {
-        if (!gdbAsync) {
+        // Fix race condition discussed in
+        // https://github.com/eclipse-cdt-cloud/cdt-gdb-adapter/pull/339#pullrequestreview-2427636654:
+        // logpoints
+        if (!gdbAsync && isRemoteTest) {
             const waitForContinued = dc.waitForEvent('continued');
             const threads = await dc.threadsRequest();
             const pr = dc.continueRequest({
